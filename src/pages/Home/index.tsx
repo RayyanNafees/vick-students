@@ -2,13 +2,14 @@ import "./style.css";
 import subs from "../../subs.json";
 import { useEffect, useState } from "preact/hooks";
 import PhoneIcon from "./phoneIcon";
+import {kebabCase} from 'change-case'
 
 const baseURL = import.meta.env.DEV
 	? "http://localhost:3000"
 	: "https://vick-json.vercel.app";
 
 const fetchStudents = (dep: string, limit = 10): Promise<StudentData[]> =>
-	fetch(`${baseURL}/${dep}?_limit=${limit}`)
+	fetch(`${baseURL}/${kebabCase(dep)}?_limit=${limit}`)
 		.then((res) => res.json())
 
 type StudentData = {
