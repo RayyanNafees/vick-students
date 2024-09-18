@@ -3,14 +3,13 @@ import subs from "../../subs.json";
 import { useEffect, useState } from "preact/hooks";
 import PhoneIcon from "./phoneIcon";
 
-const baseURL = import.meta.env.DEV ? "http://localhost:3000" : "https://my-json-server.typicode.com/9node/vickj-stundet";
+const baseURL = import.meta.env.DEV
+	? "http://localhost:3000"
+	: "https://my-json-server.typicode.com/RayyanNafees/vick-students";
 
-const fetchStudents = (dep: string): Promise<StudentData[]> =>
-	fetch(`${baseURL}/${dep}`)
+const fetchStudents = (dep: string, limit = 10): Promise<StudentData[]> =>
+	fetch(`${baseURL}/${dep}?_limit=${limit}`)
 		.then((res) => res.json())
-		.then((r: Record<string, StudentData>) =>
-			Object.entries(r).map(([k, v]) => ({ ...v, code: k })),
-		);
 
 type StudentData = {
 	img: string;
@@ -23,6 +22,7 @@ type StudentData = {
 	score: string;
 	utme: string;
 	code: string;
+	id:string
 };
 
 export function Home() {
@@ -30,14 +30,22 @@ export function Home() {
 	const [loading, setLoading] = useState(false);
 	const [students, setStudents] = useState<StudentData[]>([]);
 	const [search, setSearch] = useState<string>();
+	const [limit, setLimit] = useState(10);
 	useEffect(() => {
+		if (!dep) return;
 		setLoading(true);
-		fetchStudents(dep)
+
+		fetchStudents(dep, limit)
 			.then(setStudents)
 			.finally(() => setLoading(false));
-	}, [dep]);
+	}, [dep, limit]);
 	return (
-		<>
+		<div
+			onScroll={(e) => {
+				console.log("width", e.currentTarget.scrollWidth);
+				console.log("height", e.currentTarget.scrollHeight);
+			}}
+		>
 			<hgroup>
 				<h1>Student Database</h1>
 				<h2>Lagos University</h2>
@@ -65,23 +73,21 @@ export function Home() {
 				placeholder="Search Student"
 				onInput={(e) => setSearch(e.currentTarget.value)}
 			/>
-			{loading && (
-				<progress />
-			)}
+			{loading && <progress />}
 			{students
 				.filter((s) =>
 					!search ? true : s.name.toLowerCase().includes(search.toLowerCase()),
 				)
 				.map((student) => (
-					<a
+					<div
 						class="no-underline hover:shadow-lg transition-shadow"
 						key={student.reg}
 						href={`${dep}/${student.code}`}
 					>
-						<Student {...{...student, search}} />
-					</a>
+						<Student {...{ ...student, search }} />
+					</div>
 				))}
-		</>
+		</div>
 	);
 }
 
@@ -101,50 +107,53 @@ export const Student = ({
 }: StudentData & { code: string; search: string }) => (
 	<article class="flex items-start justify-between">
 		<div class="flex justify-start">
-			<img
-				src={img}
-				class="rounded-full border-2 size-24"
-				aspect-ratio="1"
-				width="20"
-				alt={name}
-				loading="lazy"
-				preload="lazy"
-			/>
+			<div class="text-center">
+				<img
+					src={img}
+					class="rounded-full border-2 size-24"
+					aspect-ratio="1"
+					width="20"
+					alt={name}
+					loading="lazy"
+					preload="lazy"
+				/>
+				<h6>{code}</h6>
+			</div>
 			<div class="flex-col ml-8">
 				<hgroup>
-					<h4>{!search ? name: name.replace(search, `<mark>${search}</mark>`)}</h4>
+					<h4>
+						{!search ? name : name.replace(search, `<mark>${search}</mark>`)}
+					</h4>
 					<h5>{reg}</h5>
 				</hgroup>
 				{phone && phone !== "None" && (
-					<a href={`tel:${phone}`} class="text-neutral-400 my-8">
+					<a href={`tel:${phone}`} class="text-neutral-400 my-8 no-underline">
 						<PhoneIcon /> {phone}
 					</a>
 				)}
 
-				<div class="flex flex-row justify-evenly items-center space-x-8 text-neutral-200">
-					{putme && (
-						<div class="flex-col">
-							<span>{putme}</span>
-							<h6>putme</h6>
-						</div>
-					)}
-					{+olevel && (
-						<div class="flex-col">
-							<span>{olevel}</span>
-							<h6>olevel</h6>
-						</div>
-					)}
-					{+utme && (
-						<div class="flex-col">
-							<span>{utme}</span>
-							<h6>utme</h6>
-						</div>
-					)}
-				</div>
 				<p>score: {score} </p>
 				<progress value={+score / 100} />
 			</div>
 		</div>
-		<mark class="rounded">{lga}</mark>
+		<div class="flex flex-col ">
+			<mark class="rounded">{lga}</mark>
+			<table>
+				<tr>
+					<td>utme</td>
+					<td>{utme}</td>
+				</tr>
+				<tr>
+					<td>putme</td>
+					<td>{putme}</td>
+				</tr>
+				<tr>
+					<td>olevel</td>
+					<td>{olevel}</td>
+				</tr>
+				
+			</table>
+				
+		</div>
 	</article>
 );
