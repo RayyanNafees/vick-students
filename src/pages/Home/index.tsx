@@ -6,6 +6,8 @@ import { kebabCase } from "change-case";
 
 const baseURL = "https://vick-json.vercel.app";
 
+// const baseURL = "https://localhost:3000";
+
 // Fetch all student data without pagination
 const fetchStudents = (dep: string): Promise<StudentData[]> =>
   fetch(`${baseURL}/${kebabCase(dep)}?_sort=score&_order=desc`)
@@ -44,7 +46,7 @@ export function Home() {
   useEffect(() => {
     if (!dep) return;
     setLoading(true);
-    setError(null); // Reset error when fetching new data
+    setError(null);
 
     fetchStudents(dep)
       .then(setStudents)
@@ -67,6 +69,7 @@ export function Home() {
         </option>
         {subs.map((sub: string) => (
           <option
+            class="capitalize"
             key={sub}
             value={sub.toLowerCase()}
             selected={dep === sub.toLowerCase()}
@@ -90,18 +93,52 @@ export function Home() {
         <div className="text-gray-500 font-semibold">No results found.</div>
       )}
 
-      {students
-        .filter((s) =>
-          !search ? true : s.name.toLowerCase().includes(search.toLowerCase())
-        )
-        .map((student) => (
-          <div
-            className="no-underline hover:shadow-lg transition-shadow"
-            key={student.reg}
-          >
-            <Student {...{ ...student, search }} />
-          </div>
-        ))}
+      <table className="table-auto w-full">
+        <thead>
+          <tr class="text-xs whitespace-nowrap">
+            <th>#</th>
+            <th>Name</th>
+            <th>Registration</th>
+            <th>LGA</th>
+            <th>UTME</th>
+            <th>PUTME</th>
+            <th>O-Level</th>
+            <th>Score</th>
+          </tr>
+        </thead>
+        <tbody>
+          {students
+            .filter((s) =>
+              !search
+                ? true
+                : s.name.toLowerCase().includes(search.toLowerCase())
+            )
+            .map((student, index) => (
+              <tr key={student.reg}>
+                <td>{index + 1}</td> {/* Row number */}
+                <td>{student.name}</td>
+                <td>{student.reg}</td>
+                <td>{student.lga}</td>
+                <td>{student.utme}</td>
+                <td>{student.putme}</td>
+                <td>{student.olevel}</td>
+                <td>{student.score}</td>
+                <td class="hidden">
+                  {student.phone && student.phone !== "None" ? (
+                    <a
+                      href={`tel:${student.phone}`}
+                      className="text-neutral-400 my-8 no-underline"
+                    >
+                      <PhoneIcon /> {student.phone}
+                    </a>
+                  ) : (
+                    "N/A"
+                  )}
+                </td>
+              </tr>
+            ))}
+        </tbody>
+      </table>
     </div>
   );
 }
