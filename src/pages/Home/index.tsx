@@ -5,7 +5,7 @@ import PhoneIcon from "./phoneIcon";
 
 const baseURL = import.meta.env.DEV
 	? "http://localhost:3000"
-	: "https://my-json-server.typicode.com/RayyanNafees/vick-students";
+	: "https://vick-json.vercel.app";
 
 const fetchStudents = (dep: string, limit = 10): Promise<StudentData[]> =>
 	fetch(`${baseURL}/${dep}?_limit=${limit}`)
