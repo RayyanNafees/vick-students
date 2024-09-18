@@ -18,6 +18,7 @@ export function App() {
       <main class="container">
         <Router>
           <Route path="/" component={Home} />
+          {/* <Route path="/all" component={All} /> */}
           <Route default component={NotFound} />
         </Router>
       </main>

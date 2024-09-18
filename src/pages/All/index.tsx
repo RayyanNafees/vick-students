@@ -34,7 +34,7 @@ type StudentData = {
   id: string;
 };
 
-export function Home() {
+export function All() {
   const [dep, setDep] = useState<string>();
   const [loading, setLoading] = useState(false);
   const [students, setStudents] = useState<StudentData[]>([]);
