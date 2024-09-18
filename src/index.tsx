@@ -7,7 +7,9 @@ import {
 } from "preact-iso";
 
 import { Home } from "./pages/Home/index.jsx";
+// import { All } from "./pages/All/index.jsx";
 import { NotFound } from "./pages/_404.jsx";
+
 import "./style.css";
 import "@picocss/pico";
 
