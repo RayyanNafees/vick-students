@@ -4,14 +4,14 @@ import { useEffect, useState } from "preact/hooks";
 import PhoneIcon from "./phoneIcon";
 import { kebabCase } from "change-case";
 
-// const baseURL = import.meta.env.DEV
-//   ? "http://localhost:3000"
-//   : "https://vick-json.vercel.app";
-
-const baseURL = "https://vick-json.vercel.app";
+const baseURL = import.meta.env.DEV
+  ? "http://localhost:3000"
+  : "https://vick-json.vercel.app";
 
 const fetchStudents = (dep: string, limit = 10): Promise<StudentData[]> =>
-  fetch(`${baseURL}/${dep}?_limit=${limit}`).then((res) => res.json());
+  fetch(`${baseURL}/${kebabCase(dep)}?_limit=${limit}`).then((res) =>
+    res.json()
+  );
 
 type StudentData = {
   img: string;
@@ -33,7 +33,6 @@ export function Home() {
   const [students, setStudents] = useState<StudentData[]>([]);
   const [search, setSearch] = useState<string>();
   const [limit, setLimit] = useState(10);
-
   useEffect(() => {
     if (!dep) return;
     setLoading(true);
@@ -49,9 +48,9 @@ export function Home() {
         console.log("height", e.currentTarget.scrollHeight);
       }}
     >
-      <hgroup class="my-4">
-        <h1>OAU ASpirant 2024</h1>
-        <h2></h2>
+      <hgroup>
+        <h1>Student Database</h1>
+        <h2>Lagos University</h2>
       </hgroup>
       <select
         onChange={(e) => {
