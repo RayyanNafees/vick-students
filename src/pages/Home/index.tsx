@@ -2,7 +2,7 @@ import "./style.css";
 import subs from "../../subs.json";
 
 import { useEffect, useState } from "preact/hooks";
-import { Bar } from "react-chartjs-2"; // Import Bar chart component from react-chartjs-2
+import { Bar } from "react-chartjs-2"; // We'll use Bar chart for histogram
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -15,7 +15,7 @@ import {
 import { kebabCase } from "change-case";
 import PhoneIcon from "./phoneIcon";
 
-// Register Chart.js components
+// Register Chart.js components for Bar chart
 ChartJS.register(
   CategoryScale,
   LinearScale,
@@ -71,7 +71,7 @@ export function Home() {
     fetchStudents(dep)
       .then((studentData) => {
         setStudents(studentData);
-        generateChartData(studentData); // Generate chart data once students are fetched
+        generateHistogramData(studentData); // Generate histogram data once students are fetched
       })
       .catch((err) => {
         setError(err.message || "An error occurred while fetching data.");
@@ -79,26 +79,37 @@ export function Home() {
       .finally(() => setLoading(false));
   }, [dep]);
 
-  // Function to generate chart data based on student scores
-  const generateChartData = (students: StudentData[]) => {
-    const scoreCounts: { [key: string]: number } = {};
+  // Function to generate histogram data
+  const generateHistogramData = (students: StudentData[]) => {
+    const bins = Array(10).fill(0); // Create an array with 10 bins (for score ranges 0-10, 11-20, ..., 91-100)
 
-    // Count occurrences of each score
+    // Populate the bins with student scores
     students.forEach((student) => {
       const score = Math.floor(Number(student.score)); // Round scores to nearest integer
-      scoreCounts[score] = (scoreCounts[score] || 0) + 1;
+      const binIndex = Math.min(Math.floor(score / 10), 9); // Ensure scores 91-100 go into the last bin
+      bins[binIndex] += 1;
     });
 
-    const labels = Object.keys(scoreCounts); // Get the unique score values
-    const data = Object.values(scoreCounts); // Get the count for each score
+    const labels = [
+      "0-10",
+      "11-20",
+      "21-30",
+      "31-40",
+      "41-50",
+      "51-60",
+      "61-70",
+      "71-80",
+      "81-90",
+      "91-100",
+    ];
 
-    // Set the data to be used in the chart
+    // Set the data to be used in the histogram
     setScoreDistribution({
       labels,
       datasets: [
         {
           label: "Number of Students",
-          data,
+          data: bins,
           backgroundColor: "rgba(75, 192, 192, 0.6)",
           borderColor: "rgba(75, 192, 192, 1)",
           borderWidth: 1,
@@ -143,7 +154,7 @@ export function Home() {
         <div className="text-gray-500 font-semibold">No results found.</div>
       )}
 
-      {/* Display the chart if data is available */}
+      {/* Display the histogram if data is available */}
       {scoreDistribution && (
         <div className="chart-container">
           <Bar
@@ -153,6 +164,16 @@ export function Home() {
               scales: {
                 y: {
                   beginAtZero: true,
+                  title: {
+                    display: true,
+                    text: "Number of Students",
+                  },
+                },
+                x: {
+                  title: {
+                    display: true,
+                    text: "Score Range",
+                  },
                 },
               },
             }}
