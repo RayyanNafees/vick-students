@@ -1,4 +1,4 @@
-import "./style.css";
+// import "./style.css";
 import subs from "../../subs.json";
 import { useEffect, useState } from "preact/hooks";
 import PhoneIcon from "./phoneIcon";

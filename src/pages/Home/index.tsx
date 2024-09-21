@@ -1,45 +1,11 @@
 import "./style.css";
 import subs from "../../subs.json";
-
 import { useEffect, useState } from "preact/hooks";
-import { Bar } from "react-chartjs-2"; // We'll use Bar chart for histogram
-import {
-  Chart as ChartJS,
-  CategoryScale,
-  LinearScale,
-  BarElement,
-  Title,
-  Tooltip,
-  Legend,
-} from "chart.js";
+
 import { kebabCase } from "change-case";
 import PhoneIcon from "./phoneIcon";
 
-// Register Chart.js components for Bar chart
-ChartJS.register(
-  CategoryScale,
-  LinearScale,
-  BarElement,
-  Title,
-  Tooltip,
-  Legend
-);
-
 const baseURL = "https://vick-json.vercel.app";
-
-// Fetch all student data without pagination
-const fetchStudents = (dep: string): Promise<StudentData[]> =>
-  fetch(`${baseURL}/${kebabCase(dep)}?_sort=score&_order=desc`)
-    .then((res) => {
-      if (!res.ok) {
-        throw new Error("Failed to fetch data.");
-      }
-      return res.json();
-    })
-    .catch((error) => {
-      console.error(error);
-      throw error;
-    });
 
 type StudentData = {
   img: string;
@@ -55,68 +21,65 @@ type StudentData = {
   id: string;
 };
 
+const fetchStudents = (dep: string): Promise<StudentData[]> =>
+  fetch(`${baseURL}/${kebabCase(dep)}?_sort=score&_order=desc`)
+    .then((res) => {
+      if (!res.ok) {
+        throw new Error("Failed to fetch data.");
+      }
+      return res.json();
+    })
+    .catch((error) => {
+      console.error(error);
+      throw error;
+    });
+
 export function Home() {
-  const [dep, setDep] = useState<string>();
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [department, setDepartment] = useState<string>();
+  const [searchQuery, setSearchQuery] = useState<string>();
   const [students, setStudents] = useState<StudentData[]>([]);
-  const [search, setSearch] = useState<string>();
-  const [error, setError] = useState<string | null>(null); // Error state
-  const [scoreDistribution, setScoreDistribution] = useState<any>(null); // State for chart data
+  const [stateCounts, setStateCounts] = useState<{ [key: string]: number }>({});
+
+  let score = 76;
 
   useEffect(() => {
-    if (!dep) return;
+    if (!department) return;
+
     setLoading(true);
     setError(null);
 
-    fetchStudents(dep)
+    fetchStudents(department)
       .then((studentData) => {
-        setStudents(studentData);
-        generateHistogramData(studentData); // Generate histogram data once students are fetched
+        const filteredStudents = studentData.filter(
+          (student) =>
+            Number(student.score) >= score &&
+            Number(student.olevel) !== 0 &&
+            Number(student.putme) !== 0
+        );
+
+        setStudents(filteredStudents);
+        generateStateTableData(filteredStudents);
       })
       .catch((err) => {
         setError(err.message || "An error occurred while fetching data.");
       })
       .finally(() => setLoading(false));
-  }, [dep]);
+  }, [department]);
 
-  // Function to generate histogram data
-  const generateHistogramData = (students: StudentData[]) => {
-    const bins = Array(10).fill(0); // Create an array with 10 bins (for score ranges 0-10, 11-20, ..., 91-100)
+  const generateStateTableData = (students: StudentData[]) => {
+    const counts: { [key: string]: number } = {};
 
-    // Populate the bins with student scores
     students.forEach((student) => {
-      const score = Math.floor(Number(student.score)); // Round scores to nearest integer
-      const binIndex = Math.min(Math.floor(score / 10), 9); // Ensure scores 91-100 go into the last bin
-      bins[binIndex] += 1;
+      const state = student.lga;
+      counts[state] = (counts[state] || 0) + 1;
     });
 
-    const labels = [
-      "0-10",
-      "11-20",
-      "21-30",
-      "31-40",
-      "41-50",
-      "51-60",
-      "61-70",
-      "71-80",
-      "81-90",
-      "91-100",
-    ];
-
-    // Set the data to be used in the histogram
-    setScoreDistribution({
-      labels,
-      datasets: [
-        {
-          label: "Number of Students",
-          data: bins,
-          backgroundColor: "rgba(75, 192, 192, 0.6)",
-          borderColor: "rgba(75, 192, 192, 1)",
-          borderWidth: 1,
-        },
-      ],
-    });
+    setStateCounts(counts);
   };
+
+  const totalStudents = students.length;
 
   return (
     <div>
@@ -124,70 +87,66 @@ export function Home() {
         <h1>Aspirant List</h1>
         <h2>Obafemi Awolowo University</h2>
       </hgroup>
-
-      <select onChange={(e) => setDep(e.currentTarget.value.toLowerCase())}>
-        <option disabled={!dep} selected={!dep}>
+      {/* Department selection dropdown */}
+      <select
+        onChange={(e) => setDepartment(e.currentTarget.value.toLowerCase())}
+      >
+        <option disabled={!department} selected={!department}>
           Choose Department
         </option>
         {subs.map((sub: string) => (
           <option
             key={sub}
             value={sub.toLowerCase()}
-            selected={dep === sub.toLowerCase()}
+            selected={department === sub.toLowerCase()}
           >
             {sub}
           </option>
         ))}
       </select>
-
+      {/* Search input */}
       <input
         type="search"
         placeholder="Search Student"
-        onInput={(e) => setSearch(e.currentTarget.value)}
+        onInput={(e) => setSearchQuery(e.currentTarget.value)}
       />
-
       {loading && <progress />}
-
-      {error && <div className="text-red-500 font-semibold">{error}</div>}
-
+      {error && <div className="text-red-500 font-semibold">{error}</div>}{" "}
+      {/* Error message */}
       {!loading && !error && students.length === 0 && (
         <div className="text-gray-500 font-semibold">No results found.</div>
       )}
-
-      {/* Display the histogram if data is available */}
-      {scoreDistribution && (
-        <div className="chart-container">
-          <Bar
-            data={scoreDistribution}
-            options={{
-              responsive: true,
-              scales: {
-                y: {
-                  beginAtZero: true,
-                  title: {
-                    display: true,
-                    text: "Number of Students",
-                  },
-                },
-                x: {
-                  title: {
-                    display: true,
-                    text: "Score Range",
-                  },
-                },
-              },
-            }}
-          />
-        </div>
-      )}
-
+      {/* states data*/}
+      <div className="mt-4 flex flex-row items-center justify-between">
+        <h3 className="font-bold">Total Number of Students: {totalStudents}</h3>
+        <h3>
+          Student Count Per State for {department} that scores above {score}
+        </h3>
+      </div>
       <table className="table-auto w-full">
         <thead>
-          <tr class="text-xs whitespace-nowrap">
+          <tr className="text-xs">
+            <th>State (LGA)</th>
+            <th>Number of Students</th>
+          </tr>
+        </thead>
+        <tbody>
+          {Object.entries(stateCounts).map(([state, count]) => (
+            <tr key={state}>
+              <td>{state}</td>
+              <td>{count}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      {/* Student list table */}
+      <table className="table-auto w-full mt-5">
+        <thead>
+          <tr className="text-xs whitespace-nowrap">
             <th>#</th>
             <th>Name</th>
-            <th class="hidden">Registration</th>
-            <th class="hidden">LGA</th>
+            <th className="hidden">Registration</th>
+            <th className="">STATE</th>
             <th>UTME</th>
             <th>PUTME</th>
             <th>O-Level</th>
@@ -196,22 +155,22 @@ export function Home() {
         </thead>
         <tbody>
           {students
-            .filter((s) =>
-              !search
+            .filter((student) =>
+              !searchQuery
                 ? true
-                : s.name.toLowerCase().includes(search.toLowerCase())
+                : student.name.toLowerCase().includes(searchQuery.toLowerCase())
             )
             .map((student, index) => (
               <tr key={student.reg}>
                 <td>{index + 1}</td> {/* Row number */}
                 <td>{student.name}</td>
-                <td class="hidden">{student.reg}</td>
-                <td class="hidden">{student.lga}</td>
+                <td className="hidden">{student.reg}</td>
+                <td className="">{student.lga}</td>
                 <td>{student.utme}</td>
                 <td>{student.putme}</td>
                 <td>{student.olevel}</td>
                 <td>{student.score}</td>
-                <td class="hidden">
+                <td className="hidden">
                   {student.phone && student.phone !== "None" ? (
                     <a
                       href={`tel:${student.phone}`}
