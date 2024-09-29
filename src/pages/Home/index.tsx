@@ -6,6 +6,7 @@ import { kebabCase } from "change-case";
 import PhoneIcon from "./phoneIcon";
 
 const baseURL = "https://vick-json.vercel.app";
+// const baseURL = "https://localhost:3000";
 
 type StudentData = {
   img: string;
@@ -42,7 +43,7 @@ export function Home() {
   const [students, setStudents] = useState<StudentData[]>([]);
   const [stateCounts, setStateCounts] = useState<{ [key: string]: number }>({});
 
-  let score = 76;
+  let score = 25;
 
   useEffect(() => {
     if (!department) return;
@@ -117,7 +118,7 @@ export function Home() {
         <div className="text-gray-500 font-semibold">No results found.</div>
       )}
       {/* states data*/}
-      <div className="mt-4 flex flex-row items-center justify-between">
+      <div className="hidden mt-4 flex flex-row items-center justify-between">
         <h3 className="font-bold">Total Number of Students: {totalStudents}</h3>
         <h3>
           Student Count Per State for {department} that scores above {score}
