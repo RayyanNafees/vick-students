@@ -1,25 +1,20 @@
 import "./style.css";
-import subs from "../../subs.json";
+import subs from "../../ui-subs.json";
 import { useEffect, useState } from "preact/hooks";
-
 import { kebabCase } from "change-case";
-import PhoneIcon from "./phoneIcon";
 
 const baseURL = "https://vick-json.vercel.app";
-// const baseURL = "https://localhost:3000";
 
 type StudentData = {
+  reg: string;
   img: string;
   lga: string;
   name: string;
   olevel: string;
-  phone: string;
-  putme: string;
-  reg: string;
-  score: string;
+  score: number | string;
   utme: string;
-  code: string;
-  id: string;
+  data: string;
+  agg: number;
 };
 
 const fetchStudents = (dep: string): Promise<StudentData[]> =>
@@ -39,11 +34,11 @@ export function Home() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [department, setDepartment] = useState<string>();
-  const [searchQuery, setSearchQuery] = useState<string>();
+  const [searchQuery, setSearchQuery] = useState<string>("");
   const [students, setStudents] = useState<StudentData[]>([]);
   const [stateCounts, setStateCounts] = useState<{ [key: string]: number }>({});
 
-  let score = 25;
+  const scoreThreshold = 25; // Set your score threshold
 
   useEffect(() => {
     if (!department) return;
@@ -53,13 +48,16 @@ export function Home() {
 
     fetchStudents(department)
       .then((studentData) => {
+        console.log("Fetched Data:", studentData); // Check fetched data
+
         const filteredStudents = studentData.filter(
           (student) =>
-            Number(student.score) >= score &&
+            Number(student.score) >= scoreThreshold &&
             Number(student.olevel) !== 0 &&
-            Number(student.putme) !== 0
+            Number(student.agg) !== 0
         );
 
+        console.log("Filtered Students:", filteredStudents); // Check filtered data
         setStudents(filteredStudents);
         generateStateTableData(filteredStudents);
       })
@@ -112,16 +110,17 @@ export function Home() {
         onInput={(e) => setSearchQuery(e.currentTarget.value)}
       />
       {loading && <progress />}
-      {error && <div className="text-red-500 font-semibold">{error}</div>}{" "}
-      {/* Error message */}
+      {error && <div className="text-red-500 font-semibold">{error}</div>}
+      {/* No results found message */}
       {!loading && !error && students.length === 0 && (
         <div className="text-gray-500 font-semibold">No results found.</div>
       )}
-      {/* states data*/}
+      {/* State data */}
       <div className="hidden mt-4 flex flex-row items-center justify-between">
         <h3 className="font-bold">Total Number of Students: {totalStudents}</h3>
         <h3>
-          Student Count Per State for {department} that scores above {score}
+          Student Count Per State for {department} that scores above{" "}
+          {scoreThreshold}
         </h3>
       </div>
       <table className="table-auto w-full">
@@ -147,7 +146,7 @@ export function Home() {
             <th>#</th>
             <th>Name</th>
             <th className="hidden">Registration</th>
-            <th className="">STATE</th>
+            <th className="">State</th>
             <th>UTME</th>
             <th>PUTME</th>
             <th>O-Level</th>
@@ -166,25 +165,15 @@ export function Home() {
                 <td>{index + 1}</td> {/* Row number */}
                 <td>{student.name}</td>
                 <td className="hidden">{student.reg}</td>
-                <td className="">{student.lga}</td>
+                <td>{student.lga}</td>
                 <td>{student.utme}</td>
-                <td>{student.putme}</td>
+                <td>{student.agg}</td>
                 <td>{student.olevel}</td>
                 <td>{student.score}</td>
-                <td className="hidden">
-                  {student.phone && student.phone !== "None" ? (
-                    <a
-                      href={`tel:${student.phone}`}
-                      className="text-neutral-400 my-8 no-underline"
-                    >
-                      <PhoneIcon /> {student.phone}
-                    </a>
-                  ) : (
-                    "N/A"
-                  )}
-                </td>
               </tr>
             ))}
+
+         
         </tbody>
       </table>
     </div>
