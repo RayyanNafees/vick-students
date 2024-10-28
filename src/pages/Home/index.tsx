@@ -1,5 +1,5 @@
 import "./style.css";
-import subs from "../../ui-subs.json";
+import subs from "../../subs.json";
 import { useEffect, useState } from "preact/hooks";
 import { kebabCase } from "change-case";
 
@@ -15,6 +15,7 @@ type StudentData = {
   utme: string;
   data: string;
   agg: number;
+  phone:number
 };
 
 const fetchStudents = (dep: string): Promise<StudentData[]> =>
@@ -145,7 +146,7 @@ export function Home() {
           <tr className="text-xs whitespace-nowrap">
             <th>#</th>
             <th>Name</th>
-            <th className="hidden">Registration</th>
+            <th className="hidden_">Registration</th>
             <th className="">State</th>
             <th>UTME</th>
             <th>PUTME</th>
@@ -164,7 +165,7 @@ export function Home() {
               <tr key={student.reg}>
                 <td>{index + 1}</td> {/* Row number */}
                 <td>{student.name}</td>
-                <td className="hidden">{student.reg}</td>
+                <td className="hidden_">{student.reg}</td>
                 <td>{student.lga}</td>
                 <td>{student.utme}</td>
                 <td>{student.agg}</td>
